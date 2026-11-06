@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f9">
+  <meta name="description" content="查看真实 Claude Code 轨迹、AgentFork 分支和断点恢复证据。">
+  <title>AgentFork · Trajectory Explorer</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/health.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <button class="mobile-menu icon-btn" id="mobile-menu" aria-label="打开任务列表">☰</button>
+    <a class="brand" href="/" aria-label="AgentFork 首页"><img src="/favicon.svg" alt=""><strong>AgentFork<span> / explorer</span></strong></a>
+    <div class="top-divider"></div><span class="top-caption">AgentFork 实验观察台</span>
+    <div class="top-right"><span class="dataset-tag">TERMINAL-BENCH 4.0</span><button id="refresh" class="live-badge" title="立即刷新"><i></i><span id="live-label">连接中</span><span class="refresh-icon">↻</span></button></div>
+  </header>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head"><span class="eyebrow">EXPERIMENTS</span><span class="count" id="task-count">52</span></div>
+    <h2>任务列表</h2>
+    <label class="search"><select id="campaign-select" aria-label="选择实验" style="width:100%;background:transparent;color:inherit;border:0;padding:8px 0"></select></label>
+    <label class="search"><span>⌕</span><input type="search" id="task-search" placeholder="搜索任务…" aria-label="搜索任务"></label>
+    <div class="task-filters" role="group" aria-label="任务状态筛选"><button data-filter="all" class="active">全部</button><button data-filter="running">运行中</button><button data-filter="complete">已完成</button></div>
+    <nav id="task-list" class="task-list" aria-label="任务列表"><div class="empty small">正在读取实验数据…</div></nav>
+    <div class="sidebar-footer"><span class="source-dot"></span><div><strong>真实实验数据</strong><small id="campaign-name">本地只读 · 自动刷新</small></div></div>
+  </aside>
+  <main>
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+    <section class="page-heading">
+      <div><div class="breadcrumbs">Terminal-Bench <span>/</span> CPU · 单容器 <span>/</span> <span id="task-breadcrumb">轨迹探索</span></div><h1>Trajectory Explorer<span class="title-mark">↗</span></h1><p>跟随一次探索，查看 AgentFork 如何从断点长出新的路径。</p></div>
+      <button class="button ghost how-link" id="how-link">AgentFork 如何工作 <span>↗</span></button>
+    </section>
+    <section id="metrics" class="metrics" aria-label="全局实验指标"></section>
+    <div id="health-status" class="health-status" role="status" hidden></div>
+    <section id="review-progress" class="review-progress" aria-label="当前复盘进度" hidden></section>
+    <section class="workspace">
+      <header class="workspace-heading"><div><div class="eyebrow">SELECTED TASK</div><h2 id="task-title">加载中…</h2><div class="task-subtitle" id="task-subtitle"></div></div><button class="button instruction-btn" id="instruction-toggle" aria-expanded="false">任务说明 <span>⌄</span></button></header>
+      <div id="instruction" class="instruction" hidden><pre></pre></div>
+      <div id="task-diagnostics" class="task-diagnostics" hidden></div>
+      <nav class="tabs" aria-label="内容导航"><button class="active" data-tab="explore"><span>⌘</span> 轨迹与分支</button><button data-tab="reviews"><span>◈</span> 评审记录 <b id="review-count">0</b></button><button data-tab="how"><span>◎</span> 工作原理</button></nav>
+      <section id="explore-panel" class="tab-panel">
+        <div class="section-bar"><div><h3>探索路径</h3><span class="muted" id="graph-caption">点击任意节点查看轨迹；点击连线断点回到父轨迹。</span></div><div class="legend"><span><i class="legend-dot pass"></i>通过</span><span><i class="legend-dot fail"></i>未通过</span><span><i class="legend-dot running"></i>运行中</span><span><i class="legend-dot pending"></i>未开始</span></div></div>
+        <div class="graph-scroll" id="graph-scroll"><div id="graph" class="graph"><div class="empty">选择一个任务以查看探索路径</div></div></div>
+        <div class="baseline-section"><div class="baseline-label"><span>独立采样</span><small>Pass@4 的其余三次尝试 · 从初始环境分别开始</small></div><div id="baseline" class="baseline-cards"></div></div>
+        <div id="selection-summary" class="selection-summary"></div>
+        <div class="trace-grid">
+          <aside class="turn-rail"><div class="rail-heading"><h3>执行时间线 <span id="turn-count">0</span></h3><label class="inherited-toggle" id="inherited-control" hidden><input type="checkbox" id="show-inherited"> 显示继承历史</label></div><label class="search turn-search"><span>⌕</span><input id="turn-search" type="search" placeholder="搜索命令、工具…" aria-label="搜索执行步骤"></label><div class="play-controls"><button class="icon-btn" id="previous-turn" title="上一步 (k)" aria-label="上一步">←</button><button class="button" id="play" aria-label="播放轨迹">▶ 回放轨迹</button><button class="icon-btn" id="next-turn" title="下一步 (j)" aria-label="下一步">→</button></div><div id="turn-list" class="turn-list"><div class="empty small">尚无轨迹</div></div></aside>
+          <article class="turn-detail"><div class="detail-toolbar"><div id="detail-title">选择一个执行步骤</div><div class="detail-tabs"><button data-detail="actions" class="active">动作与输出</button><button data-detail="thinking">模型思考</button><button data-detail="audit">恢复证据</button><button data-detail="grade">评分</button></div></div><div id="detail-content" class="detail-content"><div class="empty">从左侧选择一个步骤，检查命令、文件操作和工具返回。</div></div></article>
+        </div>
+      </section>
+      <section id="reviews-panel" class="tab-panel" hidden></section>
+      <section id="how-panel" class="tab-panel" hidden></section>
+    </section>
+    <footer class="page-footer"><span>Claude Code × DeepSeek Flash × AgentFork</span><span id="last-updated">每 10 秒同步本地实验文件</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

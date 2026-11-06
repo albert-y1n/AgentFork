@@ -1,0 +1,7 @@
+Sprout
+Copyright 2026 Mengyang Liu
+
+AgentFork includes derivative sandbox, runtime and review code from the project below.
+Upstream: https://github.com/RISE-X-Lab/SPROUT
+Vendored revision: 6b73b753d27d1829630f0f840e11d749f4f49dac
+See THIRD_PARTY.md for changes and attribution.
